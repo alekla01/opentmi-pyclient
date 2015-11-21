@@ -6,7 +6,7 @@ import jsonmerge
 import zipfile
 import re 
 
-class TmtClient(object):
+class OpenTmiClient(object):
   
   __version = 0
   __api = "/api/v"
@@ -20,7 +20,6 @@ class TmtClient(object):
         host = host
     if re.match("^https?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
         self.__host = host
-        host = None
     else:
         host = socket.gethostbyname(host)
 
@@ -34,22 +33,28 @@ class TmtClient(object):
     }
 
   def get_version(self):
+    """get API version number
+    """
     return self.__version
     
   def get_suite(self, suite, options=''):
-      suite = self.__get_suite( self.get_campaign_id(suite), options )
-      return suite
+    """get single suite informations
+    """
+    suite = self.__get_suite( self.get_campaign_id(suite), options )
+    return suite
 
   def get_campaign_id(self, campaignName):
-      if( self.__isObjectId(campaignName)):
-          return campaignName
-      
-      try:
-        for c in self.__get_campaigns():
-            if c['name'] == campaignName: 
-              return c['_id']
-      except KeyError:
-          return KeyError(campaignName)
+    """get campaign id from name
+    """  
+    if( self.__isObjectId(campaignName)):
+        return campaignName
+    
+    try:
+      for c in self.__get_campaigns():
+          if c['name'] == campaignName: 
+            return c['_id']
+    except KeyError:
+        return KeyError(campaignName)
 
   def get_campaigns(self):
       return self.__get_campaigns()

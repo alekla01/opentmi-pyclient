@@ -2,7 +2,7 @@ import os
 from distutils.core import setup
 from setuptools import find_packages
 
-DESCRIPTION = "tmt-client"
+DESCRIPTION = "opentmi-client"
 OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
 
@@ -11,7 +11,7 @@ OWNER_EMAILS = 'jussiva@gmail.com'
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-setup(name='tmt-client',
+setup(name='opentmi-client',
       version='0.0.1',
       description=DESCRIPTION,
       long_description=read('README.md'),
@@ -19,16 +19,16 @@ setup(name='tmt-client',
       author_email=OWNER_EMAILS,
       maintainer=OWNER_NAMES,
       maintainer_email=OWNER_EMAILS,
-      url='https://bitbucket.org/_tmt_/tmt-client-python.git',
+      url='https://github.com/OpenTMI/opentmi-client-python.git',
       packages=find_packages(exclude=['test', 'log', 'htmlcov']),
       package_data={'': ['tc_schema.json']},
       include_package_data=True,
-      license="MIT",
+      license="GPLv3",
       tests_require=["coverage"],
       test_suite = 'test',
       entry_points={
           "console_scripts": [
-              "tmtclient=tmt_client:tmt_client_main",
+              "opentmi=opentmi_client:opentmi_client_main",
           ]
       },
       install_requires=[

@@ -6,10 +6,10 @@ MIT
 
 import sys
 import optparse
-
+from opentmi_client import OpenTmiClient
 
 def cmd_parser_setup():
-    """! Configure CLI (Command Line OPtions) options
+    """! Configure CLI (Command Line Options) options
     @return Returns OptionParser's tuple of (options, arguments)
     @details Add new command line options
     """
@@ -36,7 +36,7 @@ def mbedutf_main():
 
     if opts.version:
         import pkg_resources  # part of setuptools
-        version = pkg_resources.require("tmt-client")[0].version
+        version = pkg_resources.require("opentmi-client")[0].version
         print version
     else:
         # @todo something
