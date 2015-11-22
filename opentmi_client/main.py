@@ -19,7 +19,7 @@ def cmd_parser_setup():
     parser.add_argument('--version',
                       dest='version',
                       default=False,
-                      type=bool,
+                      action='store_true',
                       help='Prints package version and exits')
 
     parser.add_argument('--host',
@@ -27,6 +27,11 @@ def cmd_parser_setup():
                       default='localhost',
                       help='OpenTMI host, default: localhost')
 
+    parser.add_argument('--json',
+                        dest='json',
+                        default=False,
+                        action='store_true',
+                        help='results as json')
     parser.add_argument('-p', '--port',
                       dest='port',
                       type=int,
@@ -35,13 +40,17 @@ def cmd_parser_setup():
 
     parser.add_argument('--list',
                       dest='list',
-                      type=bool,
+                      action='store_true',
                       default=False,
                       help='List something')
     parser.add_argument('--testcases',
                       dest='testcases',
                       default='',
                       help='Testcases')
+    parser.add_argument('--campaigns',
+                      dest='campaigns',
+                      default='',
+                      help='Campaigns')
 
     args = parser.parse_args()
     return args
@@ -59,13 +68,22 @@ def opentmi_client_main():
     if args.version:
         import pkg_resources  # part of setuptools
         version = pkg_resources.require("opentmi-client")[0].version
-        print version
+        print(version)
     else:
         client = OpenTmiClient(host=args.host, port=args.port)
         if args.list:
             if args.testcases:
-                print(json.dumps(client.get_testcases()))
-        retcode = 1
-        pass
+                testcases = client.get_testcases()
+                if args.json:
+                    print(json.dumps(testcases))    
+                for tc in testcases:
+                    print(tc['tcid'])
+            elif args.campaigns:
+                campaigns = client.get_campaign_names()
+                if args.json:
+                    print(campaigns)
+                else:
+                    for campaign in campaigns:
+                        print(campaign)
 
     sys.exit(retcode)

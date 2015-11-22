@@ -4,7 +4,8 @@ import os
 import socket
 import jsonmerge
 import zipfile
-import re 
+import re
+import logging
 
 class OpenTmiClient(object):
   
@@ -15,6 +16,16 @@ class OpenTmiClient(object):
     """Used host
     @param host: host name or IP address
     """
+    self.logger = logging.getLogger('OpenTMI')
+    self.set_host(host, port)
+    self.__headers = {
+        'content-type': 'application/json',
+        "Connection": "close"
+    }
+
+  def set_host(self, host='localhost', port=3000):
+    """Set OpenTMI host
+    """
     ip = None
     if re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
         ip = host
@@ -23,19 +34,19 @@ class OpenTmiClient(object):
     else:
         ip = socket.gethostbyname(host)
 
-    if host:
-        # 'http://10.45.0.138:3000'
+    if ip:
+        # 'http://1.2.3.4:3000'
         self.__host = 'http://'+ip+':'+str(port)
-
-    self.__headers = {
-        'content-type': 'application/json',
-        "Connection": "close"
-    }
+    
+    self.logger.info("Set OpenTMI host: %s" % (self.__host))
 
   def get_version(self):
     """get API version number
     """
     return self.__version
+  def get_opentmi_apiversion():
+    # todo 
+    pass
     
   def get_suite(self, suite, options=''):
     """get single suite informations
@@ -65,31 +76,31 @@ class OpenTmiClient(object):
       for campaign in campaigns:
           campaignNames.append(campaign['name'])
       return campaignNames
+  
   def get_testcases(self, filters=''):
       return self.__get_testcases()
 
-  def updateTestcase(self, metadata):
-      tc = self.__lookupTestcase(metadata['name'])
+  def update_testcase(self, metadata):
+      tc = self.__lookup_testcase(metadata['name'])
       if tc:
           print("Update existing TC")
-          self.__updateTestcase(tc['id'], metadata)
+          self.__update_testcase(tc['id'], metadata)
       else:
           print("Create new TC")
-          self.__createTestcase(metadata)
+          self.__create_testcase(metadata)
 
-  def sendResult(self, result):
+  def upload_Results(self, result):
       """send result to the server
       """
       print("Uploading results to DB")
-      tc_metadata = result.tc_metadata
-      tc = self.__lookupTestcase(tc_metadata['name'])
+      tc = self.__lookup_testcase(result['tcid'])
       if not tc:
-          tc = self.__createTestcase(tc_metadata)
+          tc = self.__create_testcase(result)
           if not tc:
               print("TC creation failed")
               return None
 
-      payload = CloudResult(result).getResultObject()
+      payload = result
       url = self.__get_url("/results")
       try:
 
@@ -133,9 +144,10 @@ class OpenTmiClient(object):
       url = self.__get_url("/campaigns/"+suite+"/suite"+options)
       return self.getJSON(url)
 
-  def __lookupTestcase(self, tcid):
+  def __lookup_testcase(self, tcid):
       url = self.__get_url("/testcases?tcid="+tcid)
       try:
+          self.logger.debug("Search TC: %s" % url)
           response = requests.get(url, headers=self.__headers, timeout=2.0)
           if(response.status_code == 200):
               data = json.loads(response.text)
@@ -152,9 +164,10 @@ class OpenTmiClient(object):
 
       return None
 
-  def __updateTestcase(self, id, metadata):
+  def __update_testcase(self, id, metadata):
       url = self.__get_url("/testcases/"+id)
       try:
+          self.logger.debug("Update TC: %s" % url)
           response = requests.put(url, data=json.dumps( self.__convert_to_db_tc_metadata(metadata) ), headers=self.__headers, timeout=2.0)
           if(response.status_code == 200):
               data = json.loads(response.text)
@@ -170,9 +183,10 @@ class OpenTmiClient(object):
       print("testcase metadata upload failed")
       return None
 
-  def __createTestcase(self, metadata):
+  def __create_testcase(self, metadata):
       url = self.__host + "/api/v0/testcases"
       try:
+          self.logger.debug("Create TC: %s" % url)
           response = requests.post(url, data=json.dumps( self.__convert_to_db_tc_metadata(metadata) ), headers=self.__headers, timeout=2.0)
           if(response.status_code == 200):
               data = json.loads(response.text)
@@ -191,7 +205,7 @@ class OpenTmiClient(object):
       print("new testcase metadata upload failed")
       return None
 
-  def __archiveLogs(self, files, zipFilename="logFiles.zip"):
+  def __archive_logs(self, files, zipFilename="logFiles.zip"):
       zf = zipfile.ZipFile(zipFilename, "w")
       dirname = ""
       for filename in files:
@@ -201,6 +215,7 @@ class OpenTmiClient(object):
 
   def getJSON(self, url, timeout=2.0):
        try:
+          self.logger.debug("GET: %s" % url)
           response = requests.get(url, headers=self.__headers, timeout=timeout)
           if(response.status_code == 200):
               data = json.loads(response.text)

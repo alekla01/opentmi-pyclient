@@ -33,6 +33,7 @@ setup(name='opentmi-client',
       },
       install_requires=[
           "requests",
-          "jsonmerge"
+          "jsonmerge",
+          "json"
       ]
     )
