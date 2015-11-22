@@ -11,17 +11,17 @@ class OpenTmiClient(object):
   __version = 0
   __api = "/api/v"
 
-  def __init__(self, host='localhost', port=3000)
+  def __init__(self, host='localhost', port=3000):
     """Used host
     @param host: host name or IP address
     """
-    host = None
+    ip = None
     if re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
-        host = host
+        ip = host
     if re.match("^https?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
         self.__host = host
     else:
-        host = socket.gethostbyname(host)
+        ip = socket.gethostbyname(host)
 
     if host:
         # 'http://10.45.0.138:3000'
@@ -46,7 +46,7 @@ class OpenTmiClient(object):
   def get_campaign_id(self, campaignName):
     """get campaign id from name
     """  
-    if( self.__isObjectId(campaignName)):
+    if( __isObjectId(campaignName)):
         return campaignName
     
     try:
@@ -65,6 +65,8 @@ class OpenTmiClient(object):
       for campaign in campaigns:
           campaignNames.append(campaign['name'])
       return campaignNames
+  def get_testcases(self, filters=''):
+      return self.__get_testcases()
 
   def updateTestcase(self, metadata):
       tc = self.__lookupTestcase(metadata['name'])
@@ -119,6 +121,9 @@ class OpenTmiClient(object):
   def __get_url(self, path):
       return self.__host+self.__api+str(self.__version)+path
 
+  def __get_testcases(self, filters=''):
+      url = self.__get_url("/testcases?"+filters)
+      return self.getJSON(url)
 
   def __get_campaigns(self):
       url = self.__get_url("/campaigns?f=name")
@@ -194,7 +199,7 @@ class OpenTmiClient(object):
       zf.close()
       return zipFilename
 
-def getJSON(self, url, timeout=2.0):
+  def getJSON(self, url, timeout=2.0):
        try:
           response = requests.get(url, headers=self.__headers, timeout=timeout)
           if(response.status_code == 200):
@@ -203,12 +208,10 @@ def getJSON(self, url, timeout=2.0):
           elif(response.status_code == 404):
               print('not found')
        except requests.exceptions.RequestException as e:
-           print(e)
-       except Exception as e:
-           print(e)
-
+           print('Connection error')
+       
        return None
 
-  def __isObjectId(self, value):
-      objectidRe = "^[0-9a-fA-F]{24}$"
-      return re.match(objectidRe, value)
+def __isObjectId(value):
+  objectidRe = "^[0-9a-fA-F]{24}$"
+  return re.match(objectidRe, value)
