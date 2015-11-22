@@ -10,7 +10,20 @@ For example this can fetch existing test case meta information from OpenTMI and 
 ## Command Line Interface
 
 Purpose is to provide simple Command line Interface to communicate with OpenTMI -backend
-..Work in Progress..
+
+```
+/> opentmi --help
+usage: opentmi [-h] [--version VERSION] [--host HOST] [-p PORT] [--list LIST]
+               [--testcases TESTCASES]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version VERSION     Prints package version and exits
+  --host HOST           OpenTMI host, default: localhost
+  -p PORT, --port PORT  OpenTMI port
+  --list LIST           List something
+  --testcases TESTCASES
+```
 
 ## Python API
 
