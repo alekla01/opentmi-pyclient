@@ -213,7 +213,7 @@ class OpenTmiClient(object):
       zf.close()
       return zipFilename
 
-  def getJSON(self, url, timeout=2.0):
+  def getJSON(self, url, timeout=20.0):
        try:
           self.logger.debug("GET: %s" % url)
           response = requests.get(url, headers=self.__headers, timeout=timeout)
