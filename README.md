@@ -25,11 +25,16 @@ optional arguments:
   --testcases TESTCASES
 ```
 
+example:
+```
+opentmi --host localhost --port 3000 --list --testcases 1
+```
+
 ## Python API
 
 ```
-from opentmi_client import OpenTmiClient
-client = OpenTmiClient()
+from opentmi_client.opentmi_client import OpenTmiClient
+client = OpenTmiClient(host='127.0.0.1', port=3000) # defaults
 campaigns = client.get_campaigns()
 testcases = client.get_testcases()
 client.sendResult()
