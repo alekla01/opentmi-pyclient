@@ -28,14 +28,16 @@ class OpenTmiClient(object):
             "Connection": "close"
         }
 
+
     def set_host(self, host='localhost', port=3000):
         """Set OpenTMI host
         """
+        #TODO find tool for this.
         ip = None
         if re.match("^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
             ip = host
-        if re.match("^https?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
-            self.__host = host
+        if re.match("^https?\:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+            self.__host = host + ":" + str(port)
         else:
             ip = socket.gethostbyname(host)
 
