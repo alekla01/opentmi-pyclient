@@ -1,3 +1,4 @@
 #!/usr/bin/env python
 
-from .main import opentmi_client_main
+from .main import opentmiclient_main
+from opentmi_client import create

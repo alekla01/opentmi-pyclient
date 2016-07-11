@@ -7,6 +7,9 @@ import zipfile
 import re
 import logging
 
+def create(host='localhost', port=3000, result_converter=None, testcase_converter=None):
+    return OpenTmiClient(host, port, result_converter, testcase_converter)
+
 class OpenTmiClient(object):
   
     __version = 0
