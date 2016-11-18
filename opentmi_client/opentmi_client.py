@@ -7,11 +7,15 @@ import zipfile
 import re
 import logging
 
+# Appliaction modules
+from tools import isObjectId
+
+# Generic API to construct Client Object
 def create(host='localhost', port=3000, result_converter=None, testcase_converter=None):
     return OpenTmiClient(host, port, result_converter, testcase_converter)
 
 class OpenTmiClient(object):
-  
+
     __version = 0
     __api = "/api/v"
 
@@ -19,7 +23,7 @@ class OpenTmiClient(object):
         """Used host
         @param host: host name or IP address
         """
-        self.logger = logging.getLogger('OpenTMI')
+        self.set_logger()
         self.resultConverter = result_converter
         self.tcConverter = testcase_converter
         self.set_host(host, port)
@@ -28,6 +32,26 @@ class OpenTmiClient(object):
             "Connection": "close"
         }
 
+    def set_logger(self, logger = None):
+        if not logger:
+            # use default logger
+            logger = logging.getLogger('OpenTMI')
+            logger.setLevel(logging.DEBUG)
+
+            # create console handler and set level to debug
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.DEBUG)
+
+            # create formatter
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+            # add formatter to ch
+            ch.setFormatter(formatter)
+
+            # add ch to logger
+            logger.addHandler(ch)
+
+        self.logger = logger
 
     def set_host(self, host='localhost', port=3000):
         """Set OpenTMI host
@@ -56,16 +80,38 @@ class OpenTmiClient(object):
         # todo
         pass
 
+    # API's
+
+    # Build
+    def upload_build(self, build):
+        payload = build
+        url = self.__url("/duts/builds")
+        try:
+            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, timeout=2.0)
+            if (response.status_code == 200):
+                data = json.loads(response.text)
+                # self.logger.debug(data)
+                self.logger.debug("build uploaded successfully")
+                return data
+            elif response.status_code == 300:
+                self.logger.warning("result uploaded failed")
+                self.logger.warning(response.text)
+        except requests.exceptions.RequestException as e:
+            self.logger.warning(e)
+        except Exception as e:
+            self.logger.warning(e)
+    # Suite
     def get_suite(self, suite, options=''):
         """get single suite informations
         """
         suite = self.__get_suite( self.get_campaign_id(suite), options )
         return suite
 
+    # Campaign
     def get_campaign_id(self, campaignName):
         """get campaign id from name
         """
-        if(self.__isObjectId(campaignName)):
+        if(isObjectId(campaignName)):
             return campaignName
 
         try:
@@ -76,168 +122,166 @@ class OpenTmiClient(object):
             return KeyError(campaignName)
 
     def get_campaigns(self):
-      return self.__get_campaigns()
+        return self.__get_campaigns()
 
     def get_campaign_names(self):
-      campaigns = self.__get_campaigns()
-      campaignNames = []
-      for campaign in campaigns:
-          campaignNames.append(campaign['name'])
-      return campaignNames
+        campaigns = self.__get_campaigns()
+        campaignNames = []
+        for campaign in campaigns:
+            campaignNames.append(campaign['name'])
+        return campaignNames
 
+    # Testcase
     def get_testcases(self, filters=''):
-      return self.__get_testcases()
+        return self.__get_testcases()
 
     def update_testcase(self, metadata):
-      tc = self.__lookup_testcase(metadata['name'])
-      if tc:
-          print("Update existing TC")
-          self.__update_testcase(tc['id'], metadata)
-      else:
-          print("Create new TC")
-          self.__create_testcase(metadata)
+        tc = self.__lookup_testcase(metadata['name'])
+        if tc:
+            self.logger.debug("Update existing TC")
+            self.__update_testcase(tc['id'], metadata)
+        else:
+            self.logger.debug("Create new TC")
+            self.__create_testcase(metadata)
 
+    # Result
     def upload_results(self, result):
         """send result to the server
         """
         if(self.tcConverter):
             result_meta = self.tcConverter(result.tc_metadata)
-        print("Uploading results to DB")
+        self.logger.debug("Uploading results to DB")
         tc = self.__lookup_testcase(result_meta['tcid'])
         if not tc:
             tc = self.__create_testcase(result_meta)
             if not tc:
-                print("TC creation failed")
+                self.logger.warning("TC creation failed")
                 return None
 
         payload = self.resultConverter(result) if self.resultConverter else result
-        url = self.__get_url("/results")
+        url = self.__url("/results")
         try:
             files = None
             #hasLogs, logFiles = result.hasLogs()
             #if hasLogs:
             #    zipFile = self.__archiveLogs(logFiles)
-            #    print(zipFile)
-            #     files = {"file": ("logs.zip", open(zipFile), 'rb') }
-            #    print(files)
+            #    self.logger.debug(zipFile)
+            #    files = {"file": ("logs.zip", open(zipFile), 'rb') }
+            #    self.logger.debug(files)
             response = requests.post(url, data=json.dumps(payload), headers=self.__headers, files=files, timeout=2.0)
             if(response.status_code == 200):
                 data = json.loads(response.text)
-                #print(data)
-                print("result uploaded successfully")
+                #self.logger.debug(data)
+                self.logger.debug("result uploaded successfully")
                 return data
             elif response.status_code == 300:
-                print("result uploaded failed")
-                print(response.text)
+                self.logger.warning("result uploaded failed")
+                self.logger.warning(response.text)
 
         except requests.exceptions.RequestException as e:
-            print(e)
+            self.logger.warning(e)
         except Exception as e:
-            print(e)
+            self.logger.warning(e)
 
-        print("result upload failed")
+        self.logger.warning("result upload failed")
         return None
 
-    def __get_url(self, path):
-      return self.__host+self.__api+str(self.__version)+path
+    # Private members
+    def __url(self, path):
+        return self.__host+self.__api+str(self.__version)+path
 
     def __get_testcases(self, filters=''):
-      url = self.__get_url("/testcases?"+filters)
-      return self.__get_JSON(url)
+        url = self.__url("/testcases?" + filters)
+        return self.__get_JSON(url)
 
     def __get_campaigns(self):
-      url = self.__get_url("/campaigns?f=name")
-      return self.__get_JSON(url)
+        url = self.__url("/campaigns?f=name")
+        return self.__get_JSON(url)
 
     def __get_suite(self, suite, options=''):
-      url = self.__get_url("/campaigns/"+suite+"/suite"+options)
-      return self.__get_JSON(url)
+        url = self.__url("/campaigns/" + suite + "/suite" + options)
+        return self.__get_JSON(url)
 
     def __lookup_testcase(self, tcid):
-      url = self.__get_url("/testcases?tcid="+tcid)
-      try:
-          self.logger.debug("Search TC: %s" % url)
-          response = requests.get(url, headers=self.__headers, timeout=2.0)
-          if(response.status_code == 200):
-              data = json.loads(response.text)
-              if len(data) == 1:
-                  print("testcase '%s' exists in DB" % tcid)
-                  #print(data[0])
-                  return data[0]
-          elif(response.status_code == 404):
-              print("testcase '%s' not found form DB" % tcid)
-      except requests.exceptions.RequestException as e:
-          print(e)
-      except Exception as e:
-          print(e)
+        url = self.__url("/testcases?tcid=" + tcid)
+        try:
+            self.logger.debug("Search TC: %s" % url)
+            response = requests.get(url, headers=self.__headers, timeout=2.0)
+            if(response.status_code == 200):
+                data = json.loads(response.text)
+                if len(data) == 1:
+                    self.logger.debug("testcase '%s' exists in DB" % tcid)
+                    #self.logger.debug(data[0])
+                    return data[0]
+            elif(response.status_code == 404):
+                self.logger.warning("testcase '%s' not found form DB" % tcid)
+        except requests.exceptions.RequestException as e:
+            self.logger.warning(e)
+        except Exception as e:
+            self.logger.warning(e)
 
-      return None
+        return None
 
     def __update_testcase(self, id, metadata):
-      url = self.__get_url("/testcases/"+id)
-      try:
-          self.logger.debug("Update TC: %s" % url)
-          payload = metadata
-          response = requests.put(url, data=json.dumps( payload ), headers=self.__headers, timeout=2.0)
-          if(response.status_code == 200):
-              data = json.loads(response.text)
-              #print(data)
-              print("testcase metadata uploaded successfully")
-              return data
-          print( response.content )
-      except requests.exceptions.RequestException as e:
-          print(e)
-      except Exception as e:
-          print(e)
+        url = self.__url("/testcases/" + id)
+        try:
+            self.logger.debug("Update TC: %s" % url)
+            payload = metadata
+            response = requests.put(url, data=json.dumps( payload ), headers=self.__headers, timeout=2.0)
+            if(response.status_code == 200):
+                data = json.loads(response.text)
+                self.logger.debug("testcase metadata uploaded successfully")
+                return data
+            self.logger.debug( response.content )
+        except requests.exceptions.RequestException as e:
+            self.logger.debug(e)
+        except Exception as e:
+            self.logger.debug(e)
 
-      print("testcase metadata upload failed")
-      return None
+        self.logger.warning("testcase metadata upload failed")
+        return None
 
     def __create_testcase(self, metadata):
-      url = self.__host + "/api/v0/testcases"
-      try:
-          self.logger.debug("Create TC: %s" % url)
-          payload = metadata
-          response = requests.post(url, data=json.dumps( payload ), headers=self.__headers, timeout=2.0)
-          if(response.status_code == 200):
-              data = json.loads(response.text)
-              print("new testcase metadata uploaded successfully with id: %s" % json.dumps(data))
-              return data
-          else:
-              print( response.content )
-      except requests.exceptions.RequestException as e:
-          print(e)
-      except KeyError as e:
-          print('missing meta-information: %s'%e)
-      except Exception as e:
-          print('createTestcase throw exception:')
-          print(e)
+        url = self.__host + "/api/v0/testcases"
+        try:
+            self.logger.debug("Create TC: %s" % url)
+            payload = metadata
+            response = requests.post(url, data=json.dumps( payload ), headers=self.__headers, timeout=2.0)
+            if(response.status_code == 200):
+                data = json.loads(response.text)
+                self.logger.debug("new testcase metadata uploaded successfully with id: %s" % json.dumps(data))
+                return data
+            else:
+                self.logger.warning( response.content )
+        except requests.exceptions.RequestException as e:
+            self.logger.warning(e)
+        except KeyError as e:
+            self.logger.warning('missing meta-information: %s'%e)
+        except Exception as e:
+            self.logger.warning('createTestcase throw exception:')
+            self.logger.warning(e)
 
-      print("new testcase metadata upload failed")
-      return None
+        self.logger.warning("new testcase metadata upload failed")
+        return None
 
     def __archive_logs(self, files, zipFilename="logFiles.zip"):
-      zf = zipfile.ZipFile(zipFilename, "w")
-      dirname = ""
-      for filename in files:
-          zf.write(os.path.join(dirname, filename))
-      zf.close()
-      return zipFilename
+        zf = zipfile.ZipFile(zipFilename, "w")
+        dirname = ""
+        for filename in files:
+            zf.write(os.path.join(dirname, filename))
+        zf.close()
+        return zipFilename
 
     def __get_JSON(self, url, timeout=20.0):
-       try:
-          self.logger.debug("GET: %s" % url)
-          response = requests.get(url, headers=self.__headers, timeout=timeout)
-          if(response.status_code == 200):
-              data = json.loads(response.text)
-              return data
-          elif(response.status_code == 404):
-              print('not found')
-       except requests.exceptions.RequestException as e:
-           print('Connection error')
+        try:
+            self.logger.debug("GET: %s" % url)
+            response = requests.get(url, headers=self.__headers, timeout=timeout)
+            if(response.status_code == 200):
+                data = json.loads(response.text)
+                return data
+            elif(response.status_code == 404):
+                self.logger.warning('not found')
+        except requests.exceptions.RequestException as e:
+            self.logger.warning('Connection error')
 
-       return None
-
-    def __isObjectId(value):
-      objectidRe = "^[0-9a-fA-F]{24}$"
-      return re.match(objectidRe, value)
+        return None
