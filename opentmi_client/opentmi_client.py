@@ -93,8 +93,8 @@ class OpenTmiClient(object):
                 # self.logger.debug(data)
                 self.logger.debug("build uploaded successfully")
                 return data
-            elif response.status_code == 300:
-                self.logger.warning("result uploaded failed")
+            else:
+                self.logger.warning("result uploaded failed, status_code: ", response.status_code)
                 self.logger.warning(response.text)
         except requests.exceptions.RequestException as e:
             self.logger.warning(e)
@@ -174,8 +174,8 @@ class OpenTmiClient(object):
                 #self.logger.debug(data)
                 self.logger.debug("result uploaded successfully")
                 return data
-            elif response.status_code == 300:
-                self.logger.warning("result uploaded failed")
+            else:
+                self.logger.warning("result uploaded failed. status_code: ", response.status_code)
                 self.logger.warning(response.text)
 
         except requests.exceptions.RequestException as e:
