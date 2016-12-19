@@ -87,7 +87,7 @@ class OpenTmiClient(object):
         payload = build
         url = self.__url("/duts/builds")
         try:
-            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, timeout=2.0)
+            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, timeout=10.0)
             if (response.status_code == 200):
                 data = json.loads(response.text)
                 # self.logger.debug(data)
@@ -168,7 +168,7 @@ class OpenTmiClient(object):
             #    self.logger.debug(zipFile)
             #    files = {"file": ("logs.zip", open(zipFile), 'rb') }
             #    self.logger.debug(files)
-            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, files=files, timeout=2.0)
+            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, files=files, timeout=10.0)
             if(response.status_code == 200):
                 data = json.loads(response.text)
                 #self.logger.debug(data)
@@ -227,7 +227,7 @@ class OpenTmiClient(object):
         try:
             self.logger.debug("Update TC: %s" % url)
             payload = metadata
-            response = requests.put(url, data=json.dumps( payload ), headers=self.__headers, timeout=2.0)
+            response = requests.put(url, data=json.dumps( payload ), headers=self.__headers, timeout=10.0)
             if(response.status_code == 200):
                 data = json.loads(response.text)
                 self.logger.debug("testcase metadata uploaded successfully")
@@ -246,7 +246,7 @@ class OpenTmiClient(object):
         try:
             self.logger.debug("Create TC: %s" % url)
             payload = metadata
-            response = requests.post(url, data=json.dumps( payload ), headers=self.__headers, timeout=2.0)
+            response = requests.post(url, data=json.dumps( payload ), headers=self.__headers, timeout=10.0)
             if(response.status_code == 200):
                 data = json.loads(response.text)
                 self.logger.debug("new testcase metadata uploaded successfully with id: %s" % json.dumps(data))
