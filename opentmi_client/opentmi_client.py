@@ -6,9 +6,18 @@ import jsonmerge
 import zipfile
 import re
 import logging
+from requests import Response
 
 # Appliaction modules
 from tools import isObjectId
+
+
+REQUEST_TIMEOUT = 30
+
+def _is_success(response):
+    assert isinstance(response, Response)
+    code = response.status_code
+    return code >= 200 and code < 300
 
 # Generic API to construct Client Object
 def create(host='localhost', port=3000, result_converter=None, testcase_converter=None):
@@ -19,13 +28,17 @@ class OpenTmiClient(object):
     __version = 0
     __api = "/api/v"
 
-    def __init__(self, host='localhost', port=3000, result_converter=None, testcase_converter=None):
+    def __init__(self,
+                host='localhost',
+                port=3000,
+                result_converter=None,
+                testcase_converter=None):
         """Used host
         @param host: host name or IP address
         """
         self.set_logger()
         self.resultConverter = result_converter
-        self.tcConverter = testcase_converter
+        self._tcConverter = testcase_converter
         self.set_host(host, port)
         self.__headers = {
             'content-type': 'application/json',
@@ -87,8 +100,8 @@ class OpenTmiClient(object):
         payload = build
         url = self.__url("/duts/builds")
         try:
-            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, timeout=10.0)
-            if (response.status_code == 200):
+            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, timeout=REQUEST_TIMEOUT)
+            if _is_success(response):
                 data = json.loads(response.text)
                 # self.logger.debug(data)
                 self.logger.debug("build uploaded successfully")
@@ -148,12 +161,10 @@ class OpenTmiClient(object):
     def upload_results(self, result):
         """send result to the server
         """
-        if(self.tcConverter):
-            result_meta = self.tcConverter(result.tc_metadata)
-        self.logger.debug("Uploading results to DB")
-        tc = self.__lookup_testcase(result_meta['tcid'])
+        tc_meta = self._tcConverter(result.tc_metadata) if self._tcConverter else result
+        tc = self.__lookup_testcase(tc_meta['tcid'])
         if not tc:
-            tc = self.__create_testcase(result_meta)
+            tc = self.__create_testcase(tc_meta)
             if not tc:
                 self.logger.warning("TC creation failed")
                 return None
@@ -168,8 +179,8 @@ class OpenTmiClient(object):
             #    self.logger.debug(zipFile)
             #    files = {"file": ("logs.zip", open(zipFile), 'rb') }
             #    self.logger.debug(files)
-            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, files=files, timeout=10.0)
-            if(response.status_code == 200):
+            response = requests.post(url, data=json.dumps(payload), headers=self.__headers, files=files, timeout=REQUEST_TIMEOUT)
+            if _is_success(response):
                 data = json.loads(response.text)
                 #self.logger.debug(data)
                 self.logger.debug("result uploaded successfully")
@@ -205,9 +216,9 @@ class OpenTmiClient(object):
     def __lookup_testcase(self, tcid):
         url = self.__url("/testcases?tcid=" + tcid)
         try:
-            self.logger.debug("Search TC: %s" % url)
-            response = requests.get(url, headers=self.__headers, timeout=2.0)
-            if(response.status_code == 200):
+            self.logger.debug("Search TC: %s (%s)" % (tcid, url))
+            response = requests.get(url, headers=self.__headers, timeout=REQUEST_TIMEOUT)
+            if _is_success(response):
                 data = json.loads(response.text)
                 if len(data) == 1:
                     self.logger.debug("testcase '%s' exists in DB" % tcid)
@@ -227,8 +238,8 @@ class OpenTmiClient(object):
         try:
             self.logger.debug("Update TC: %s" % url)
             payload = metadata
-            response = requests.put(url, data=json.dumps( payload ), headers=self.__headers, timeout=10.0)
-            if(response.status_code == 200):
+            response = requests.put(url, data=json.dumps( payload ), headers=self.__headers, timeout=REQUEST_TIMEOUT)
+            if _is_success(response):
                 data = json.loads(response.text)
                 self.logger.debug("testcase metadata uploaded successfully")
                 return data
@@ -246,8 +257,8 @@ class OpenTmiClient(object):
         try:
             self.logger.debug("Create TC: %s" % url)
             payload = metadata
-            response = requests.post(url, data=json.dumps( payload ), headers=self.__headers, timeout=10.0)
-            if(response.status_code == 200):
+            response = requests.post(url, data=json.dumps( payload ), headers=self.__headers, timeout=REQUEST_TIMEOUT)
+            if _is_success(response):
                 data = json.loads(response.text)
                 self.logger.debug("new testcase metadata uploaded successfully with id: %s" % json.dumps(data))
                 return data
@@ -272,16 +283,17 @@ class OpenTmiClient(object):
         zf.close()
         return zipFilename
 
-    def __get_JSON(self, url, timeout=20.0):
+    def __get_JSON(self, url):
         try:
             self.logger.debug("GET: %s" % url)
-            response = requests.get(url, headers=self.__headers, timeout=timeout)
-            if(response.status_code == 200):
+            response = requests.get(url, headers=self.__headers, timeout=REQUEST_TIMEOUT)
+            if _is_success(response):
                 data = json.loads(response.text)
                 return data
             elif(response.status_code == 404):
                 self.logger.warning('not found')
         except requests.exceptions.RequestException as e:
-            self.logger.warning('Connection error')
+            self.logger.warning('Connection error %s', e.message)
+            raise e
 
         return None
