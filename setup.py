@@ -28,7 +28,7 @@ setup(name='opentmi_client',
       test_suite = 'test',
       entry_points={
           "console_scripts": [
-              "opentmi=opentmi_client:opentmi_client_main",
+              "opentmi=opentmi_client:opentmiclient_main",
           ]
       },
       install_requires=[
