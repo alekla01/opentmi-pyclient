@@ -1,7 +1,7 @@
 import re
 
 def isObjectId(value):
-  if (value is None):
+  if value is None:
     return False
 
   objectidRe = "^[0-9a-fA-F]{24}$"

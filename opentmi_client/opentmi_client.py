@@ -123,7 +123,7 @@ class OpenTmiClient(object):
             self.logger.warning("exception happened while resolving suite: %s" % (suite))
             return None
         
-        if (campaign_id is None):
+        if campaign_id is None:
             self.logger.warning("could not resolve campaign id for suite: %s" % (suite))
             return None
 
@@ -217,8 +217,6 @@ class OpenTmiClient(object):
         return self.__get_JSON(url)
 
     def __get_suite(self, suite, options=''):
-        suite = suite if isinstance(suite, basestring) else str(suite)
-
         url = self.__url("/campaigns/" + suite + "/suite" + options)
         return self.__get_JSON(url)
 
