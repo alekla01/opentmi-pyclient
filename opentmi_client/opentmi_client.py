@@ -117,7 +117,17 @@ class OpenTmiClient(object):
     def get_suite(self, suite, options=''):
         """get single suite informations
         """
-        suite = self.__get_suite( self.get_campaign_id(suite), options )
+        try:
+            campaign_id = self.get_campaign_id(suite)
+        except Exception as err:
+            self.logger.warning("exception happened while resolving suite: %s" % (suite))
+            return None
+        
+        if campaign_id is None:
+            self.logger.warning("could not resolve campaign id for suite: %s" % (suite))
+            return None
+
+        suite = self.__get_suite(campaign_id, options)
         return suite
 
     # Campaign
@@ -127,12 +137,9 @@ class OpenTmiClient(object):
         if(isObjectId(campaignName)):
             return campaignName
 
-        try:
-          for c in self.__get_campaigns():
-              if c['name'] == campaignName:
+        for c in self.__get_campaigns():
+            if c['name'] == campaignName:
                 return c['_id']
-        except KeyError:
-            return KeyError(campaignName)
 
     def get_campaigns(self):
         return self.__get_campaigns()
