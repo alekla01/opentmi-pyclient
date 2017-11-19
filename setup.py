@@ -7,6 +7,10 @@ OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
 
 
+def read_requirements(file):
+    with open(file) as f:
+        required = f.read().splitlines()
+
 # Utility function to cat in a file (used for the README)
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -23,16 +27,13 @@ setup(name='opentmi_client',
       packages=find_packages(exclude=['test', 'log', 'htmlcov']),
       package_data={'': ['tc_schema.json']},
       include_package_data=True,
-      license="GPLv3",
-      tests_require=["coverage"],
+      license="MIT",
+      tests_require=read_requirements('dev_requirements.txt'),
       test_suite = 'test',
       entry_points={
           "console_scripts": [
               "opentmi=opentmi_client:opentmiclient_main",
           ]
       },
-      install_requires=[
-          "requests",
-          "jsonmerge"
-      ]
+      install_requires=read_requirements('requirements.txt')
     )
