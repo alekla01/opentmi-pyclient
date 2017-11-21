@@ -7,9 +7,9 @@ OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
 
 
-def read_requirements(file):
-    with open(file) as f:
-        required = f.read().splitlines()
+def read_requirements(fname):
+    with open(fname) as fhandle:
+        return fhandle.read().splitlines()
 
 # Utility function to cat in a file (used for the README)
 def read(fname):
