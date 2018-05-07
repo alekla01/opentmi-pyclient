@@ -16,7 +16,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='opentmi_client',
-      version='0.2.2',
+      version='0.3.0',
       description=DESCRIPTION,
       long_description=read('README.md'),
       author=OWNER_NAMES,
