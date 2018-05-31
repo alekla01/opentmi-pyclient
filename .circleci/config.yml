@@ -49,7 +49,7 @@ jobs:
             . venv/bin/activate
             coverage run setup.py test
             coverage html
-            coveralls
+            coveralls || true
             pylint opentmi_client
 
       - store_artifacts:

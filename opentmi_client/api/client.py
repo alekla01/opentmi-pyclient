@@ -10,6 +10,7 @@ from opentmi_client.transport import Transport
 
 REQUEST_TIMEOUT = 30
 
+
 #pylint: disable-msg=too-many-arguments
 def create(host='localhost', port=3000, result_converter=None, testcase_converter=None):
     """
@@ -163,6 +164,7 @@ class OpenTmiClient(object):
         for campaign in self.__get_campaigns():
             if campaign['name'] == campaign_name:
                 return campaign['_id']
+        return None
 
     def get_campaigns(self):
         """

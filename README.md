@@ -1,7 +1,7 @@
 # Python Client library for OpenTMI
 
-[![CircleCI](https://circleci.com/gh/OpenTMI/opentmi-client-python/tree/master.svg?style=svg)](https://circleci.com/gh/OpenTMI/opentmi-client-python/tree/master)
-[![Coverage Status](https://coveralls.io/repos/github/OpenTMI/opentmi-client-python/badge.svg)](https://coveralls.io/github/OpenTMI/opentmi-client-python)
+[![CircleCI](https://circleci.com/gh/OpenTMI/opentmi-pyclient/tree/master.svg?style=svg)](https://circleci.com/gh/OpenTMI/opentmi-pyclient/tree/master)
+[![Coverage Status](https://coveralls.io/repos/github/OpenTMI/opentmi-pyclient/badge.svg)](https://coveralls.io/github/OpenTMI/opentmi-pyclient)
 
 This library purpose is to provide simple interface for OpenTMI -backend.
 
