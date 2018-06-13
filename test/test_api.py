@@ -24,7 +24,7 @@ def mocked_put(*args, **kwargs):
     return args[1]
 
 def mocked_get(*args, **kwargs):
-    if args[0] == "http://127.0.0.1:3000/api/v0/testcases?tcid=notfound":
+    if kwargs.get('params', {}).get('tcid') == "notfound":
         return []
     return [{"tcid": "abc"}]
 
@@ -86,7 +86,7 @@ class TestClient(unittest.TestCase):
         client = Client()
         tc_data = {"tcid": "notfound"}
         client.upload_results(tc_data)
-        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases?tcid=notfound")
+        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases", params={"tcid": "notfound"})
         mock_post.assert_has_calls([
             call("http://127.0.0.1:3000/api/v0/testcases", tc_data),
             call("http://127.0.0.1:3000/api/v0/results", tc_data, files=None)])
@@ -97,7 +97,14 @@ class TestClient(unittest.TestCase):
         client = Client()
         tc_data = {"tcid": "abc"}
         client.upload_results(tc_data)
-        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases?tcid=abc")
+        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases", params={"tcid": "abc"})
         mock_post.assert_called_once_with("http://127.0.0.1:3000/api/v0/results", tc_data, files=None)
+
+    @patch('opentmi_client.transport.Transport.get_json', side_effect=mocked_get)
+    def test_get_test(self, mock_get):
+        client = Client()
+        tc_data = {"tcid": "abc %s"}
+        client.get_testcases(tc_data)
+        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases", params={"tcid": "abc %s"})
 
 

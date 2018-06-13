@@ -14,13 +14,14 @@ import pkg_resources  # part of setuptools
 from opentmi_client.api import OpenTmiClient
 
 EXIT_CODE_SUCCESS = 0
+EXIT_CODE_NOT_IMPLEMENTED = 1
 EXIT_CODE_CONNECTION_ERROR = 60
 EXIT_CODE_OPERATION_TIMEOUT = 61
 EXIT_CODE_INVALID_PARAMETERS = 62
 EXIT_CODE_OPERATION_FAILED = 63
 
 
-def get_subparser(subparsers, name, func, **kwargs):
+def get_subparser(subparsers, name, func=None, **kwargs):
     """
     Get subparser
     :param subparsers:
@@ -30,7 +31,8 @@ def get_subparser(subparsers, name, func, **kwargs):
     :return: Parser
     """
     tmp_parser = subparsers.add_parser(name, **kwargs)
-    tmp_parser.set_defaults(func=func)
+    if func:
+        tmp_parser.set_defaults(func=func)
     return tmp_parser
 
 
@@ -45,7 +47,7 @@ class OpentTMIClientCLI(object):
         :param args:
         """
         self.console_handler = logging.StreamHandler()
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("opentmi")
         self.logger.handlers = [self.console_handler]
         if args is None:
             args = sys.argv[1:]
@@ -57,10 +59,14 @@ class OpentTMIClientCLI(object):
         Execute
         :return: 0
         """
-        if hasattr(self.args, "func"):
-            return self.args.func(self.args)
+        if hasattr(self.args, "func") and callable(self.args.func):
+            try:
+                return self.args.func(self.args)
+            except NotImplementedError as error:
+                self.logger.error("Not implemented %s", str(error))
+                return EXIT_CODE_NOT_IMPLEMENTED
         self.parser.print_usage()
-        return 0
+        return EXIT_CODE_SUCCESS
 
     def argparser_setup(self, sysargs):
         """
@@ -110,7 +116,7 @@ class OpentTMIClientCLI(object):
                       help='Display version information')
 
         parser_list = get_subparser(subparsers, 'list',
-                                    func=subcmd_list_handler,
+                                    func=self.subcmd_list_handler,
                                     help='List something')
 
         parser_list.add_argument('--json',
@@ -138,30 +144,57 @@ class OpentTMIClientCLI(object):
                                  help='Builds')
 
         parser_store = get_subparser(subparsers, 'store',
-                                     func=None,
                                      help='Create something')
 
         subsubparsers = parser_store.add_subparsers(title='subcommand',
                                                     help='sub-command help',
                                                     metavar='<subcommand>')
 
-        get_subparser(subsubparsers, 'testcase',
-                      func=self.subcmd_store_testcase,
-                      help='Store Testcase')
-        get_subparser(subsubparsers, 'result',
-                      func=self.subcmd_store_result,
-                      help='Store Test Result')
+        parser_store_testcase = get_subparser(subsubparsers, 'testcase',
+                                              func=self.subcmd_store_testcase,
+                                              help='Store Testcase')
+        parser_store_testcase.add_argument('--file',
+                                           dest='file',
+                                           default=None,
+                                           help='Filename',
+                                           type=self.read_json_file,
+                                           required=True)
+
+        parser_store_result = get_subparser(subsubparsers, 'result',
+                                            func=self.subcmd_store_result,
+                                            help='Store Test Result')
+        parser_store_result.add_argument('--file',
+                                         dest='file',
+                                         default=None,
+                                         help='Filename',
+                                         type=self.read_json_file,
+                                         required=True)
+
         parser_store_build = get_subparser(subsubparsers, 'build',
                                            func=self.subcmd_store_build,
                                            help='Store Build')
         parser_store_build.add_argument('--file',
                                         dest='file',
                                         default=None,
-                                        help='Filename')
+                                        help='Filename',
+                                        type=self.read_json_file,
+                                        required=True)
 
         args = parser.parse_args(args=sysargs)
         self.parser = parser
         return args
+
+    def read_json_file(self, filename):
+        """
+        :param filename: json filename to be read
+        :returns: Dict
+        """
+        try:
+            with open(filename) as data_file:
+                return json.load(data_file)
+        except IOError as error:
+            self.logger.error("Given file (%s) is not valid! %s", filename, error)
+            raise argparse.ArgumentTypeError(error)
 
     def set_log_level_from_verbose(self):
         """
@@ -196,51 +229,66 @@ class OpentTMIClientCLI(object):
             print(versions[0].version)
         return EXIT_CODE_SUCCESS
 
-    def subcmd_store_build(self, _args):
+    def subcmd_store_handler(self, _args):
         """
         :param self:
         :param _args:
         :return:
         """
-        raise NotImplementedError()
 
-    def subcmd_store_testcase(self, _args):
+        raise NotImplementedError('store')
+
+    def subcmd_store_build(self, args): # pylint: disable=no-self-use
         """
         :param self:
-        :param _args:
+        :param args:
         :return:
         """
-        raise NotImplementedError()
+        client = OpenTmiClient(host=args.host, port=args.port)
+        client.upload_build(args.file)
+        return EXIT_CODE_SUCCESS
 
-
-    def subcmd_store_result(self, _args):
+    def subcmd_store_testcase(self, args): # pylint: disable=no-self-use
         """
         :param self:
-        :param _args:
+        :param args:
         :return:
         """
-        raise NotImplementedError()
+        client = OpenTmiClient(host=args.host, port=args.port)
+        client.update_testcase(args.file)
+        return EXIT_CODE_SUCCESS
 
-def subcmd_list_handler(args):
-    """
-    :param args:
-    :return:
-    """
-    client = OpenTmiClient(host=args.host, port=args.port)
-    if args.testcases:
-        testcases = client.get_testcases()
-        if args.json:
-            print(json.dumps(testcases))
-        for test_case in testcases:
-            print(test_case['tcid'])
-    elif args.campaigns:
-        campaigns = client.get_campaign_names()
-        if args.json:
-            print(campaigns)
-        else:
-            for campaign in campaigns:
-                print(campaign)
-    return 0
+
+    def subcmd_store_result(self, args): # pylint: disable=no-self-use
+        """
+        :param self:
+        :param args:
+        :return:
+        """
+        client = OpenTmiClient(host=args.host, port=args.port)
+        client.upload_results(args.file)
+        return EXIT_CODE_SUCCESS
+
+    def subcmd_list_handler(self, args): # pylint: disable=no-self-use
+        """
+        :param args:
+        :return:
+        """
+        client = OpenTmiClient(host=args.host, port=args.port)
+        if args.testcases:
+            testcases = client.get_testcases()
+            if args.json:
+                print(json.dumps(testcases))
+            for test_case in testcases:
+                print(test_case['tcid'])
+        elif args.campaigns:
+            campaigns = client.get_campaign_names()
+            if args.json:
+                print(campaigns)
+            else:
+                for campaign in campaigns:
+                    print(campaign)
+        return 0
 
 def opentmiclient_main():
     """
