@@ -18,6 +18,7 @@ class TestTools(unittest.TestCase):
         self.assertEqual(resolve_host("1.2.3.4:3000"), "http://1.2.3.4:3000")
         self.assertEqual(resolve_host("http://1.2.3.4"), "http://1.2.3.4")
         self.assertEqual(resolve_host("https://1.2.3.4"), "https://1.2.3.4")
+        self.assertEqual(resolve_host("https://mydomain"), "https://mydomain")
         self.assertEqual(resolve_host("https://1.2.3.4:3000"), "https://1.2.3.4:3000")
         self.assertEqual(resolve_host("https://1.2.3.4", 3000), "https://1.2.3.4:3000")
 

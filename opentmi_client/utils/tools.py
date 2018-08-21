@@ -2,7 +2,6 @@
 Generic tools function
 """
 import re
-import socket
 import zipfile
 import os
 import six
@@ -22,28 +21,18 @@ def is_object_id(value):
     return True if match else False
 
 
-def resolve_host(host="localhost", port=None):
+def resolve_host(host, port=None):
     """
     Resolve host from given arguments
     :param host: string
     :param port: number
     :return:
     """
-    ip_addr = None
-    _host = None
-    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d{2,5})?$", host):
-        ip_addr = host
-    elif re.match(r"^https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d{2,5})?$", host):
-        _host = host
-    else:
-        ip_addr = socket.gethostbyname(host)
-    if ip_addr:
-        # 'http://1.2.3.4:3000'
-        _host = 'http://' + ip_addr
     if port and port != 80:
-        _host += ":" + str(port)
-    return _host
-
+        host += ":" + str(port)
+    if not host.startswith("http"):
+        host = "http://" + host
+    return host
 
 def archive_files(files, zip_filename, base_path=""):
     """

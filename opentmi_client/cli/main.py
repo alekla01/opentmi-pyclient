@@ -105,7 +105,7 @@ class OpentTMIClientCLI(object):
         parser.add_argument('-p', '--port',
                             dest='port',
                             type=int,
-                            default=3000,
+                            default=0,
                             help='OpenTMI port')
 
         subparsers = parser.add_subparsers(title='subcommand',

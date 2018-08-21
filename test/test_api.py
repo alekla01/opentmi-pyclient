@@ -54,7 +54,7 @@ class TestClient(unittest.TestCase):
         mock_transport(tr_mock)
         client = Client(transport=tr_mock)
         client.login("user", "passwd")
-        tr_mock.post_json.assert_called_once_with("http://127.0.0.1:3000/login",
+        tr_mock.post_json.assert_called_once_with("http://127.0.0.1/login",
                                                   {"username": "user", "password": "passwd"})
 
     def test_logout(self):
@@ -72,7 +72,7 @@ class TestClient(unittest.TestCase):
     def test_upload_build(self, mock_post):
         client = Client()
         self.assertDictEqual(client.upload_build({}), {})
-        mock_post.assert_called_once_with("http://127.0.0.1:3000/api/v0/duts/builds", {})
+        mock_post.assert_called_once_with("http://127.0.0.1/api/v0/duts/builds", {})
 
     @patch('opentmi_client.transport.Transport.post_json', side_effect=mocked_post)
     def test_upload_build_exceptions(self, mock_post):
@@ -86,10 +86,10 @@ class TestClient(unittest.TestCase):
         client = Client()
         tc_data = {"tcid": "notfound"}
         client.upload_results(tc_data)
-        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases", params={"tcid": "notfound"})
+        mock_get.assert_called_once_with("http://127.0.0.1/api/v0/testcases", params={"tcid": "notfound"})
         mock_post.assert_has_calls([
-            call("http://127.0.0.1:3000/api/v0/testcases", tc_data),
-            call("http://127.0.0.1:3000/api/v0/results", tc_data, files=None)])
+            call("http://127.0.0.1/api/v0/testcases", tc_data),
+            call("http://127.0.0.1/api/v0/results", tc_data, files=None)])
 
     @patch('opentmi_client.transport.Transport.get_json', side_effect=mocked_get)
     @patch('opentmi_client.transport.Transport.post_json', side_effect=mocked_post)
@@ -97,14 +97,14 @@ class TestClient(unittest.TestCase):
         client = Client()
         tc_data = {"tcid": "abc"}
         client.upload_results(tc_data)
-        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases", params={"tcid": "abc"})
-        mock_post.assert_called_once_with("http://127.0.0.1:3000/api/v0/results", tc_data, files=None)
+        mock_get.assert_called_once_with("http://127.0.0.1/api/v0/testcases", params={"tcid": "abc"})
+        mock_post.assert_called_once_with("http://127.0.0.1/api/v0/results", tc_data, files=None)
 
     @patch('opentmi_client.transport.Transport.get_json', side_effect=mocked_get)
     def test_get_test(self, mock_get):
         client = Client()
         tc_data = {"tcid": "abc %s"}
         client.get_testcases(tc_data)
-        mock_get.assert_called_once_with("http://127.0.0.1:3000/api/v0/testcases", params={"tcid": "abc %s"})
+        mock_get.assert_called_once_with("http://127.0.0.1/api/v0/testcases", params={"tcid": "abc %s"})
 
 

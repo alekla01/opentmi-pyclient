@@ -24,7 +24,7 @@ class Transport(object):
 
     __request_timeout = 10
 
-    def __init__(self, host='localhost', port=3000):
+    def __init__(self, host="127.0.0.1", port=None):
         """
         Constructor for Transport
         :param host:
@@ -99,7 +99,7 @@ class Transport(object):
                                     params=Transport._params_encode(params))
             if Transport.is_success(response):
                 return response.json()
-            elif response.status_code == NOT_FOUND:
+            if response.status_code == NOT_FOUND:
                 self.logger.warning("not found")
             else:
                 self.logger.warning("Request failed: %s (code: %s)",
@@ -129,10 +129,9 @@ class Transport(object):
             if Transport.is_success(response):
                 data = json.loads(response.text)
                 return data
-            else:
-                self.logger.warning("status_code: %s", str(response.status_code))
-                self.logger.warning(response.text)
-                raise TransportException(response.text, response.status_code)
+            self.logger.warning("status_code: %s", str(response.status_code))
+            self.logger.warning(response.text)
+            raise TransportException(response.text, response.status_code)
         except RequestException as error:
             self.logger.warning(error)
             raise TransportException(str(error))
@@ -154,10 +153,9 @@ class Transport(object):
             if Transport.is_success(response):
                 data = json.loads(response.text)
                 return data
-            else:
-                self.logger.warning("status_code: %s", str(response.status_code))
-                self.logger.warning(response.text)
-                raise TransportException(response.text, response.status_code)
+            self.logger.warning("status_code: %s", str(response.status_code))
+            self.logger.warning(response.text)
+            raise TransportException(response.text, response.status_code)
         except RequestException as error:
             self.logger.warning(error)
             raise TransportException(str(error))
