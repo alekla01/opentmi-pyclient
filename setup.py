@@ -13,7 +13,7 @@ from setuptools.command.install import install
 DESCRIPTION = "opentmi-client"
 OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
-VERSION = '0.3.2'
+VERSION = '0.3.3'
 
 # Utility function to cat in a file (used for the README)
 def read(fname):
