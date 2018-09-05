@@ -6,11 +6,6 @@ DESCRIPTION = "opentmi-client"
 OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
 
-
-def read_requirements(fname):
-    with open(fname) as fhandle:
-        return fhandle.read().splitlines()
-
 # Utility function to cat in a file (used for the README)
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -27,12 +22,19 @@ setup(name='opentmi_client',
       packages=find_packages(exclude=['test', 'log', 'htmlcov', 'docs']),
       include_package_data=True,
       license="MIT",
-      tests_require=read_requirements('dev_requirements.txt'),
+      tests_require=read('dev_requirements.txt').splitlines(),
       test_suite = 'test',
       entry_points={
           "console_scripts": [
               "opentmi=opentmi_client:opentmiclient_main",
           ]
       },
-      install_requires=read_requirements('requirements.txt')
+      install_requires=read('requirements.txt').splitlines(),
+      classifiers=[
+          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
+          "License :: OSI Approved :: MIT License",
+          "Operating System :: OS Independent",
+      ]
     )
