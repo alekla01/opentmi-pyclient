@@ -1,17 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+:copyright: (c) 2018 by Jussi Vatjus-Anttila
+:license: MIT, see LICENSE for more details.
+"""
 import os
+import sys
 from distutils.core import setup
 from setuptools import find_packages
+from setuptools.command.install import install
 
 DESCRIPTION = "opentmi-client"
 OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
+VERSION = '0.3.2'
 
 # Utility function to cat in a file (used for the README)
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+class VerifyVersionCommand(install):
+    """Custom command to verify that the git tag matches our version"""
+    description = 'verify that the git tag matches our version'
+
+    def run(self):
+        tag = os.getenv('CIRCLE_TAG')
+        if tag != VERSION:
+            info = "Git tag: {0} does not match the"
+            "version of this app: {1}".format(tag, VERSION)
+            sys.exit(info)
+
 setup(name='opentmi_client',
-      version='0.3.2',
+      version=VERSION,
       description=DESCRIPTION,
       long_description=read('README.md'),
       author=OWNER_NAMES,
@@ -23,7 +43,8 @@ setup(name='opentmi_client',
       include_package_data=True,
       license="MIT",
       tests_require=read('dev_requirements.txt').splitlines(),
-      test_suite = 'test',
+      test_suite='test',
+      keywords='opentmi ci cd api sdk',
       entry_points={
           "console_scripts": [
               "opentmi=opentmi_client:opentmiclient_main",
@@ -36,5 +57,8 @@ setup(name='opentmi_client',
           "Programming Language :: Python :: 3.7",
           "License :: OSI Approved :: MIT License",
           "Operating System :: OS Independent",
-      ]
-    )
+      ],
+      cmdclass={
+          'verify': VerifyVersionCommand,
+      }
+     )
