@@ -3,23 +3,15 @@
 [![CircleCI](https://circleci.com/gh/OpenTMI/opentmi-pyclient/tree/master.svg?style=svg)](https://circleci.com/gh/OpenTMI/opentmi-pyclient/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/OpenTMI/opentmi-pyclient/badge.svg)](https://coveralls.io/github/OpenTMI/opentmi-pyclient)
 
-This library purpose is to provide simple interface for OpenTMI -backend.
+This is the Python client library for [OpenTMI](https://github.com/opentmi/opentmi).
 
 ## installation
 
-`python setup.py install`
+To install, simply use `pip`:
 
-## Test
+`$ pip install --upgrade opentmi-client`
 
-`python setup.py test`
-
-## Compile documentation
-
-```
-sphinx-apidoc -o docs/_static opentmi_client
-make -C docs html
-```
-
+See the [Developers Guide](development.md) if you want to develop this library.
 
 ## Command Line Interface
 
@@ -48,9 +40,9 @@ opentmi --host localhost --port 3000 --list --testcases 1
 
 ```
 from opentmi_client import Client
-client = Client(host='127.0.0.1', port=3000)
-campaigns = client.get_campaigns()
-testcases = client.get_testcases()
+client = Client('https://127.0.0.1')
+print(client.get_campaigns())
+print(client.get_testcases())
 result = {
   "tcid": "test-case",
   "campaign": "my-campaign",
@@ -72,7 +64,7 @@ result = {
 client.upload_results(result) # require valid result json object or converter function
 ```
 
-Alternative you can set `result_converter()` and `testcase_converter()` -functions in OpenTmiClient constructor.
+Alternative you can set `result_converter()` and `testcase_converter()` -functions in Client constructor.
 Converter functions will be used to convert application specific result object for opentmi suitable format.
 
 Suitable result schema is described [here](https://github.com/OpenTMI/opentmi/blob/master/app/models/results.js#L15).
@@ -85,4 +77,6 @@ Test case document schema is available [here](https://github.com/OpenTMI/opentmi
 * There is couple mandatory fields by default: `tcid` and `exec.verdict`. Allowed values for result verdict is: `pass`, `fail`, `inconclusive`, `blocked` and `error`. `upload_results()` -function also create test case document if it doesn't exists in database.
 
 
-LICENSE: MIT
+## LICENSE
+
+[MIT](LICENSE)
