@@ -3,3 +3,4 @@ coveralls
 mock
 pylint
 Sphinx
+nose
