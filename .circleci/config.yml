@@ -31,7 +31,7 @@ workflows:
             - test-2.7
           filters:
             tags:
-              only: /v?[0-9]+(\.[0-9]+)*/
+              only: /^v.*/
             branches:
               ignore: /.*/
 jobs:
@@ -92,6 +92,8 @@ jobs:
   deploy:
     <<: *test-template
     steps:
+      - attach_workspace:
+          at: ~/opentmi-pyclient
       - run:
           name: verify git tag vs. version
           command: |
