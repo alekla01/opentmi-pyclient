@@ -13,7 +13,7 @@ from setuptools.command.install import install
 DESCRIPTION = "opentmi-client"
 OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
-VERSION = '0.3.4-dev3'
+VERSION = '0.3.4-dev'
 
 # Utility function to cat in a file (used for the README)
 def read(fname):
@@ -25,9 +25,10 @@ class VerifyVersionCommand(install):
 
     def run(self):
         tag = os.getenv('CIRCLE_TAG')
-        if tag != VERSION:
+        version = "v" + VERSION
+        if tag != version:
             info = "Git tag: {0} does not match the"\
-            "version of this app: {1}".format(tag, VERSION)
+            "version of this app: {1}".format(tag, version)
             sys.exit(info)
 
 setup(name='opentmi_client',
