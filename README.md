@@ -40,7 +40,8 @@ opentmi --host localhost --port 3000 --list --testcases 1
 
 ```
 from opentmi_client import Client
-client = Client('https://127.0.0.1')
+client = Client("https://127.0.0.1")
+client.login_with_access_token("my-github-access-token")
 print(client.get_campaigns())
 print(client.get_testcases())
 result = {

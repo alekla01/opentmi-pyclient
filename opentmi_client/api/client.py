@@ -59,10 +59,27 @@ class OpenTmiClient(object):
         :return: OpenTmiClient
         """
         payload = {
-            "username": username,
+            "email": username,
             "password": password
         }
-        url = self.__transport.host + "/login"
+        url = self.__transport.host + "/auth/login"
+        response = self.__transport.post_json(url, payload)
+        token = response.get("token")
+        self.logger.info("Login success. Token: %s", token)
+        self.set_token(token)
+        return self
+
+    def login_with_access_token(self, access_token, service="github"):
+        """
+        Login to OpenTMI server using access token
+        :param access_token: access token to be used
+        :param service: access token provider
+        :return: OpenTmiClient
+        """
+        payload = {
+            "access_token": access_token
+        }
+        url = "{}/auth/{}/token".format(self.__transport.host, service)
         response = self.__transport.post_json(url, payload)
         token = response.get("token")
         self.logger.info("Login success. Token: %s", token)

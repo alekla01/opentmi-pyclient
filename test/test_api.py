@@ -54,8 +54,15 @@ class TestClient(unittest.TestCase):
         mock_transport(tr_mock)
         client = Client(transport=tr_mock)
         client.login("user", "passwd")
-        tr_mock.post_json.assert_called_once_with("http://127.0.0.1/login",
-                                                  {"username": "user", "password": "passwd"})
+        tr_mock.post_json.assert_called_once_with("http://127.0.0.1/auth/login",
+                                                  {"email": "user", "password": "passwd"})
+    def test_login_with_access_token(self):
+        tr_mock = Transport()
+        mock_transport(tr_mock)
+        client = Client(transport=tr_mock)
+        client.login_with_access_token("token")
+        tr_mock.post_json.assert_called_once_with("http://127.0.0.1/auth/github/token",
+                                                  {"access_token": "token"})
 
     def test_logout(self):
         tr_mock = Transport()
