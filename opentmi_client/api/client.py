@@ -2,16 +2,23 @@
 OpenTmiClient module
 """
 import json
+import os
 
 
 # Application modules
-from opentmi_client.utils import is_object_id, get_logger, OpentmiException, TransportException
+from opentmi_client.utils import is_object_id, get_logger
+# from opentmi_client.utils import requires_logged_in
+from opentmi_client.utils import OpentmiException, TransportException
 from opentmi_client.transport import Transport
 
 REQUEST_TIMEOUT = 30
 
+ENV_GITHUB_ACCESS_TOKEN = "OPENTMI_GITHUB_ACCESS_TOKEN"
+ENV_OPENTMI_USERNAME = "OPENTMI_USERNAME"
+ENV_OPENTMI_PASSWORD = "OPENTMI_PASSWORD"
 
-#pylint: disable-msg=too-many-arguments
+
+# pylint: disable-msg=too-many-arguments
 def create(host='localhost', port=None, result_converter=None, testcase_converter=None):
     """
     Generic create -api for Client
@@ -21,7 +28,10 @@ def create(host='localhost', port=None, result_converter=None, testcase_converte
     :param testcase_converter:
     :return: OpenTmiClient
     """
-    return OpenTmiClient(host, port, result_converter, testcase_converter)
+    client = OpenTmiClient(host, port)
+    client.set_result_converter(result_converter)
+    client.set_tc_converter(testcase_converter)
+    return client
 
 
 class OpenTmiClient(object):
@@ -35,21 +45,34 @@ class OpenTmiClient(object):
     def __init__(self,
                  host='127.0.0.1',
                  port=None,
-                 result_converter=None,
-                 testcase_converter=None,
                  transport=None):
         """
         Constructor for OpenTMI client
         :param host: opentmi host address (default="localhost")
         :param port: opentmi server port (default=3000)
-        :param result_converter:
-        :param testcase_converter: function
         :param transport: optional Transport layer. Mostly for testing purpose
         """
         self.__logger = get_logger()
-        self.__result_converter = result_converter
-        self.__tc_converter = testcase_converter
+        self.__result_converter = None
+        self.__tc_converter = None
         self.__transport = Transport(host, port) if not transport else transport
+        self.try_login()
+
+    def set_result_converter(self, func):
+        """
+        Set custom result converter
+        :param func: conversion function
+        :return: None
+        """
+        self.__result_converter = func
+
+    def set_tc_converter(self, func):
+        """
+        Set custom test case converter
+        :param func: conversion function
+        :return: None
+        """
+        self.__tc_converter = func
 
     def login(self, username, password):
         """
@@ -62,7 +85,7 @@ class OpenTmiClient(object):
             "email": username,
             "password": password
         }
-        url = self.__transport.host + "/auth/login"
+        url = self.__resolve_url("/auth/login")
         response = self.__transport.post_json(url, payload)
         token = response.get("token")
         self.logger.info("Login success. Token: %s", token)
@@ -80,11 +103,20 @@ class OpenTmiClient(object):
             "access_token": access_token
         }
         url = "{}/auth/{}/token".format(self.__transport.host, service)
+        self.logger.debug("Login using %s token", service)
         response = self.__transport.post_json(url, payload)
         token = response.get("token")
         self.logger.info("Login success. Token: %s", token)
         self.set_token(token)
         return self
+
+    @property
+    def is_logged_in(self):
+        """
+        get logged in state
+        :return: boolean true if logged in.
+        """
+        return self.__transport.has_token()
 
     def set_logger(self, logger):
         """
@@ -127,6 +159,7 @@ class OpenTmiClient(object):
         """
         return self.__version
 
+    # @requires_logged_in
     def upload_build(self, build):
         """
         Upload build
@@ -146,6 +179,7 @@ class OpenTmiClient(object):
         return None
 
     # Suite
+    # @requires_logged_in
     def get_suite(self, suite, options=''):
         """
         get single suite informations
@@ -169,6 +203,7 @@ class OpenTmiClient(object):
         return suite
 
     # Campaign
+    # @requires_logged_in
     def get_campaign_id(self, campaign_name):
         """
         get campaign id from name
@@ -183,6 +218,7 @@ class OpenTmiClient(object):
                 return campaign['_id']
         return None
 
+    # @requires_logged_in
     def get_campaigns(self):
         """
         Get campaigns
@@ -190,6 +226,7 @@ class OpenTmiClient(object):
         """
         return self.__get_campaigns()
 
+    # @requires_logged_in
     def get_campaign_names(self):
         """
         Get campaign names
@@ -201,6 +238,7 @@ class OpenTmiClient(object):
             campaign_names.append(campaign['name'])
         return campaign_names
 
+    # @requires_logged_in
     def get_testcases(self, filters=None):
         """
         Get testcases
@@ -209,6 +247,7 @@ class OpenTmiClient(object):
         """
         return self.__get_testcases(filters)
 
+    # @requires_logged_in
     def update_testcase(self, metadata):
         """
         update test case
@@ -225,6 +264,7 @@ class OpenTmiClient(object):
             self.__create_testcase(metadata)
         return self
 
+    # @requires_logged_in
     def upload_results(self, result):
         """
         Upload result
@@ -258,6 +298,29 @@ class OpenTmiClient(object):
         except OpentmiException as error:
             self.logger.warning(error)
         return None
+
+    def try_login(self, raise_if_fail=False):
+        """
+        function to check if login is done.
+        If not try to use environment variables by default
+        :param raise_if_fail: Boolean, raise if login failed
+        or env variables are does not exists. Default False
+        :return: OpenTmiClient
+        :throws: OpentmiException in case of failure
+        """
+        # use environment variables if available
+        token = os.getenv(ENV_GITHUB_ACCESS_TOKEN)
+        if token:
+            self.logger.info("Using github access token from environment variable")
+            return self.login_with_access_token(access_token=token, service="github")
+        username = os.getenv(ENV_OPENTMI_USERNAME)
+        password = os.getenv(ENV_OPENTMI_PASSWORD)
+        if username and password:
+            self.logger.info("Using opentmi credentials from environment variable")
+            return self.login(username, password)
+        if raise_if_fail:
+            raise OpentmiException("login required")
+        return self
 
     # Private members
 
@@ -326,5 +389,8 @@ class OpenTmiClient(object):
         self.logger.warning("new testcase metadata upload failed")
         return None
 
+    def __resolve_url(self, path):
+        return self.__transport.get_url(path)
+
     def __resolve_apiuri(self, path):
-        return self.__transport.host + self.__api + str(self.__version) + path
+        return self.__resolve_url(self.__api + str(self.__version) + path)

@@ -10,7 +10,7 @@ try:
 except ImportError:
     # python3
     from urllib.parse import urlencode, quote
-from opentmi_client.utils import get_logger, resolve_host, TransportException
+from opentmi_client.utils import get_logger, resolve_host, resolve_token, TransportException
 
 REQUEST_TIMEOUT = 30
 NOT_FOUND = 404
@@ -24,26 +24,34 @@ class Transport(object):
 
     __request_timeout = 10
 
-    def __init__(self, host="127.0.0.1", port=None):
+    def __init__(self, host="127.0.0.1", port=None, token=None):
         """
         Constructor for Transport
-        :param host:
-        :param port:
+        :param host: Hostname as a String
+        :param port: optional port as a positive Integer
+        :param token: optional token
         """
         self.logger = get_logger()
         self.__token = None
         self.__host = None
+        if token:
+            self.set_token(token)
+
         self.set_host(host, port)
         self.logger.info("OpenTMI host: %s", self.host)
 
-    def set_host(self, host, port):
+    def set_host(self, host, port=None):
         """
         Set host address and port
         :param host:
         :param port:
-        :return:
+        :return: None
         """
         self.__host = resolve_host(host, port)
+        token = resolve_token(host)
+        if token:
+            self.__host = self.__host.replace(token + "@", "")
+            self.set_token(token)
 
     @property
     def host(self):
@@ -53,6 +61,14 @@ class Transport(object):
         """
         return self.__host
 
+    @property
+    def token(self):
+        """
+        Getter for token
+        :return: token as a string or None
+        """
+        return self.__token
+
     def set_token(self, token):
         """
         Set authentication token
@@ -61,6 +77,21 @@ class Transport(object):
         """
         self.__token = token
         return self
+
+    def has_token(self):
+        """
+        Check if token is available
+        :return: Boolean True if token exists, otherwise False
+        """
+        return self.__token is not None
+
+    def get_url(self, path):
+        """
+        Create url from path
+        :param path: string, e.g. "/auth/login"
+        :return: url as a string
+        """
+        return self.__host + path
 
     @property
     def __headers(self):

@@ -34,6 +34,17 @@ def resolve_host(host, port=None):
         host = "http://" + host
     return host
 
+def resolve_token(host):
+    """
+    Resolve access token from host string
+    Format: https://<token>@<url>
+    :param host: host as a string
+    :return: token or None
+    """
+    host_re = r"^https?://([a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+)\@.+$"
+    match = re.match(host_re, host)
+    return match.group(1) if match else None
+
 def archive_files(files, zip_filename, base_path=""):
     """
     Archive given files
@@ -47,3 +58,23 @@ def archive_files(files, zip_filename, base_path=""):
         zip_file.write(os.path.join(base_path, filename), filename)
     zip_file.close()
     return zip_filename
+
+def requires_logged_in(func):
+    """
+    Decorator which verify that client are logged in
+    if not but env variables are available
+    it tries to loggin using them
+    :param fn: function to decorated
+    :return: wrapper function
+    """
+    def ret_fn(*args):
+        """
+        wrapper function
+        :param args: argument for decorated function
+        :return: return decorated function return values
+        """
+        self = args[0]
+        if not self.is_logged_in:
+            self.try_login(raise_if_fail=True)
+        return func(*args)
+    return ret_fn

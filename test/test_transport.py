@@ -1,7 +1,8 @@
+# pylint: disable=missing-docstring
+
 import unittest
-from mock import patch, MagicMock
+from mock import patch
 from requests import Response, RequestException
-import requests
 from opentmi_client.transport import Transport
 from opentmi_client.utils.exceptions import TransportException
 
@@ -39,6 +40,21 @@ class TestRequest(unittest.TestCase):
         self.assertFalse(Transport.is_success(resp))
         resp.status_code = 199
         self.assertFalse(Transport.is_success(resp))
+
+    def test_set_host(self):
+        transport = Transport()
+        HOST = "127.0.0.1"
+        transport.set_host(HOST)
+        self.assertEqual(transport.token, None)
+        self.assertEqual(transport.host, "http://"+HOST)
+
+        transport.set_host("http://a.b.c@"+HOST)
+        self.assertEqual(transport.token, "a.b.c")
+        self.assertEqual(transport.host, "http://"+HOST)
+
+        transport.set_host("https://aa.bb.cc@"+HOST)
+        self.assertEqual(transport.token, "aa.bb.cc")
+        self.assertEqual(transport.host, "https://"+HOST)
 
     def test_get_json_not_found(self):
         transport = Transport()
