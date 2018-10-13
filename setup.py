@@ -13,7 +13,7 @@ from setuptools.command.install import install
 DESCRIPTION = "opentmi-client"
 OWNER_NAMES = 'Jussi Vatjus-Anttila'
 OWNER_EMAILS = 'jussiva@gmail.com'
-VERSION = '0.4.0'
+VERSION = '0.4.1'
 
 # Utility function to cat in a file (used for the README)
 def read(fname):
@@ -44,7 +44,13 @@ setup(name='opentmi_client',
       packages=find_packages(exclude=['test', 'log', 'htmlcov', 'docs']),
       include_package_data=True,
       license="MIT",
-      tests_require=read('dev_requirements.txt').splitlines(),
+      tests_require=[
+          "coverage",
+          "mock",
+          "pylint",
+          "Sphinx",
+          "nose"
+      ],
       test_suite='test',
       keywords='opentmi ci cd api sdk',
       entry_points={
@@ -52,7 +58,13 @@ setup(name='opentmi_client',
               "opentmi=opentmi_client:opentmiclient_main",
           ]
       },
-      install_requires=read('requirements.txt').splitlines(),
+      install_requires=[
+          "requests>=2.13.0",
+          "jsonmerge",
+          "six",
+          "pydash",
+          "junitparser"
+      ],
       classifiers=[
           "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3.6",
