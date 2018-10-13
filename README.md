@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/OpenTMI/opentmi-pyclient/tree/master.svg?style=svg)](https://circleci.com/gh/OpenTMI/opentmi-pyclient/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/OpenTMI/opentmi-pyclient/badge.svg)](https://coveralls.io/github/OpenTMI/opentmi-pyclient)
+[![PyPI version](https://badge.fury.io/py/opentmi-client.svg)](https://badge.fury.io/py/opentmi-client)
 
 This is the Python client library for [OpenTMI](https://github.com/opentmi/opentmi).
 
