@@ -3,7 +3,7 @@
 import os
 import unittest
 from mock import patch
-from opentmi_client.utils import is_object_id, resolve_host, resolve_token, archive_files, requires_logged_in
+from opentmi_client.utils import is_object_id, resolve_host, resolve_token, archive_files, remove_empty_from_dict, requires_logged_in
 
 
 class Test:
@@ -48,7 +48,9 @@ class TestTools(unittest.TestCase):
 
     def test_archive(self):
         zip = 'temp.zip'
-        archive_files(['test_tools.py'], zip, os.path.dirname(__file__))
+        cur_dir = os.path.dirname(__file__)
+        file_to_zip = os.path.join(cur_dir, 'test_tools.py')
+        archive_files([file_to_zip], zip, cur_dir)
         self.assertTrue(os.path.exists(zip))
         os.remove(zip)
 
@@ -63,6 +65,9 @@ class TestTools(unittest.TestCase):
             self.assertTrue(test.api())
             self.assertTrue(monkey.calledOnceWith(raise_if_fail=True))
 
+    def test_remove_empty_from_dict(self):
+        data = {"a": {"b": {}, "c": [], "d": 1}}
+        self.assertEqual(remove_empty_from_dict(data), {"a": {"d": 1}})
 
 if __name__ == '__main__':
     unittest.main()

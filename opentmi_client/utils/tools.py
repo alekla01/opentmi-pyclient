@@ -59,22 +59,20 @@ def archive_files(files, zip_filename, base_path=""):
     zip_file.close()
     return zip_filename
 
-def requires_logged_in(func):
+def remove_empty_from_dict(dictionary):
     """
-    Decorator which verify that client are logged in
-    if not but env variables are available
-    it tries to loggin using them
-    :param fn: function to decorated
-    :return: wrapper function
+    Remove all empty items from nested object
+    :param dictionary: dict
+    :return: dict
     """
-    def ret_fn(*args):
-        """
-        wrapper function
-        :param args: argument for decorated function
-        :return: return decorated function return values
-        """
-        self = args[0]
-        if not self.is_logged_in:
-            self.try_login(raise_if_fail=True)
-        return func(*args)
-    return ret_fn
+    if isinstance(dictionary, dict):
+        try:
+            return dict((k, remove_empty_from_dict(v)) for k, v in dictionary.iteritems() if
+                        v and remove_empty_from_dict(v))
+        except AttributeError:
+            return dict((k, remove_empty_from_dict(v)) for k, v in dictionary.items() if
+                        v and remove_empty_from_dict(v))
+    elif isinstance(dictionary, list):
+        return [remove_empty_from_dict(v) for v in dictionary if v and remove_empty_from_dict(v)]
+    else:
+        return dictionary

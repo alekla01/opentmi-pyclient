@@ -3,7 +3,7 @@
 Module to collect all public API's
 """
 from .cli import opentmiclient_main
-from .api import create, Client, OpenTmiClient
+from .api import create, Client, OpenTmiClient, Build, Result
 from .transport import Transport
 
 if __name__ == '__main__':

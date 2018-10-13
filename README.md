@@ -51,38 +51,20 @@ opentmi --host localhost --port 3000 --list --testcases 1
 ## Python API
 
 ```
-from opentmi_client import Client
+from opentmi_client import OpenTmiClient, Result
 client = Client("https://127.0.0.1")
 client.login_with_access_token("my-github-access-token")
-print(client.get_campaigns())
-print(client.get_testcases())
-result = {
-  "tcid": "test-case",
-  "campaign": "my-campaign",
-  "exec": {
-    "verdict": "pass",
-    "duration": "8",
-  },
-  "sut": {
-    "gitUrl": "github.com/opentmi/opentmi",
-    "commitId": "123",
-  },
-  "dut": {
-    "type": "hw",
-    "vendor": "ABC",
-    "model": "platform#1",
-    "sn": "123"
-  }
-}
-client.upload_results(result) # require valid result json object or converter function
+
+result = Result()
+result.tcid = "test-case-a"
+result.verdict = "pass"
+client.post_result(result)
 ```
 
-Alternative you can set `result_converter()` and `testcase_converter()` -functions in Client constructor.
-Converter functions will be used to convert application specific result object for opentmi suitable format.
+See more examples from [here](https://github.com/OpenTMI/opentmi-pyclient/tree/master/examples).
 
-Suitable result schema is described [here](https://github.com/OpenTMI/opentmi/blob/master/app/models/results.js#L15).
-
-Test case document schema is available [here](https://github.com/OpenTMI/opentmi/blob/master/app/models/testcase.js).
+Server side Result schema can be found from [here](https://github.com/OpenTMI/opentmi/blob/master/app/models/results.js#L15).
+and Test case schema is available [here](https://github.com/OpenTMI/opentmi/blob/master/app/models/testcase.js).
 
 **notes**
 
