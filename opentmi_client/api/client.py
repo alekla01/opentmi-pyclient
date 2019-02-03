@@ -26,16 +26,18 @@ ENV_OPENTMI_PASSWORD = "OPENTMI_PASSWORD"
 
 
 # pylint: disable-msg=too-many-arguments
-def create(host='localhost', port=None, result_converter=None, testcase_converter=None):
+def create(host='localhost', port=None, result_converter=None,
+           testcase_converter=None, logger=None):
     """
     Generic create -api for Client
     :param host:
     :param port:
-    :param result_converter:
-    :param testcase_converter:
+    :param result_converter: optional converter function
+    :param testcase_converter: optional converter function
+    :param logger: optional logging instance
     :return: OpenTmiClient
     """
-    client = OpenTmiClient(host, port)
+    client = OpenTmiClient(host, port, logger)
     client.set_result_converter(result_converter)
     client.set_tc_converter(testcase_converter)
     return client
@@ -52,14 +54,16 @@ class OpenTmiClient(object):
     def __init__(self,
                  host='127.0.0.1',
                  port=None,
-                 transport=None):
+                 transport=None,
+                 logger=None):
         """
         Constructor for OpenTMI client
         :param host: opentmi host address (default="localhost")
         :param port: opentmi server port (default=3000)
         :param transport: optional Transport layer. Mostly for testing purpose
+        :param logger: optional Logging instance.
         """
-        self.__logger = get_logger()
+        self.__logger = logger or get_logger()
         self.__transport = Transport(host, port) if not transport else transport
         # backward compatibility
         self.__result_converter = None
