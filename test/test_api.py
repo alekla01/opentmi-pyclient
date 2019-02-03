@@ -3,7 +3,7 @@
 import unittest
 import os
 from mock import mock, MagicMock, patch, call
-from opentmi_client.api import Client, create
+from opentmi_client.api import Client, create, Event
 from opentmi_client.utils import TransportException, OpentmiException
 from opentmi_client.transport.transport import Transport
 
@@ -155,3 +155,26 @@ class TestClient(unittest.TestCase):
         client.get_testcases(tc_data)
         mock_get.assert_called_once_with("http://127.0.0.1/api/v0/testcases", params={"tcid": "abc %s"})
         # mock_post.assert_called_once_with("http://127.0.0.1/auth/github/token", {"access_token": DUMMY_TOKEN})
+
+    @patch('opentmi_client.transport.Transport.post_json', side_effect=mocked_post)
+    def test_upload_event(self, mock_post):
+        client = Client()
+        client.set_token(DUMMY_TOKEN)
+        event = Event()
+        event.eid = "123"
+        client.post_event(event)
+        mock_post.assert_called_once_with("http://127.0.0.1/api/v0/events", {"id": "123"})
+
+    @patch('opentmi_client.transport.Transport.post_json', side_effect=TransportException("error"))
+    def test_upload_event_exception_transport(self, mock_post):
+        client = Client()
+        client.set_token(DUMMY_TOKEN)
+        event = Event()
+        self.assertEqual(client.post_event(event), None)
+
+    @patch('opentmi_client.transport.Transport.post_json', side_effect=OpentmiException("error"))
+    def test_upload_event_exceptions_opentmi(self, mock_post):
+        client = Client()
+        client.set_token(DUMMY_TOKEN)
+        event = Event()
+        self.assertEqual(client.post_event(event), None)

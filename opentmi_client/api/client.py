@@ -1,3 +1,4 @@
+# pylint: disable=too-many-public-methods
 """
 OpenTmiClient module
 """
@@ -8,12 +9,13 @@ import os
 # import deprecation
 # Application imports
 from opentmi_client.utils import is_object_id, get_logger
-# from opentmi_client.utils import requires_logged_in
+from opentmi_client.utils import requires_logged_in
 from opentmi_client.utils import OpentmiException, TransportException
 from opentmi_client.utils.decorators import setter_rules
 from opentmi_client.transport import Transport
 from opentmi_client.api.result import Result
 from opentmi_client.api.build import Build
+from opentmi_client.api.event import Event
 
 
 REQUEST_TIMEOUT = 30
@@ -164,6 +166,26 @@ class OpenTmiClient(object):
         :return:
         """
         return self.__version
+
+    @requires_logged_in
+    @setter_rules(value_type=Event)
+    def post_event(self, event):
+        """
+        Send build
+        :param build: Build object
+        :return: Stored build data
+        """
+        payload = event.data
+        url = self.__resolve_apiuri("/events")
+        try:
+            data = self.__transport.post_json(url, payload)
+            self.logger.debug("Event uploaded successfully, _id: %s", data.get("_id"))
+            return data
+        except TransportException as error:
+            self.logger.warning("Event upload failed: %s (status: %s)", error.message, error.code)
+        except OpentmiException as error:
+            self.logger.warning(error)
+        return None
 
     # @requires_logged_in
     @setter_rules(value_type=Build)

@@ -52,14 +52,22 @@ opentmi --host localhost --port 3000 --list --testcases 1
 ## Python API
 
 ```
-from opentmi_client import OpenTmiClient, Result
+from opentmi_client import OpenTmiClient, Result, Event
 client = Client("https://127.0.0.1")
 client.login_with_access_token("my-github-access-token")
 
+# post result
 result = Result()
 result.tcid = "test-case-a"
 result.verdict = "pass"
 client.post_result(result)
+
+# post event
+event = Event()
+event.msgid = "ALLOCATED"
+event.priority.level = "info",
+event.ref.resource = "5697740f956cd2fd35c69062"
+client.post_event(event)
 ```
 
 See more examples from [here](https://github.com/OpenTMI/opentmi-pyclient/tree/master/examples).

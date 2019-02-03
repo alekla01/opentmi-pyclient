@@ -12,5 +12,6 @@ from opentmi_client.api.result import Execution
 from opentmi_client.api.result import Framework
 from opentmi_client.api.result import File
 from opentmi_client.api.result import Provider
+from opentmi_client.api.event import Event
 
 Client = OpenTmiClient

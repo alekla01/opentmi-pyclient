@@ -18,7 +18,7 @@ def is_object_id(value):
 
     objectid_re = r"^[0-9a-fA-F]{24}$"
     match = re.match(objectid_re, value)
-    return True if match else False
+    return bool(match)
 
 
 def resolve_host(host, port=None):

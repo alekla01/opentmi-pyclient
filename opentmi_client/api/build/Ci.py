@@ -9,7 +9,6 @@ class Location(BaseApi):
     """
     Location Class
     """
-    pass
 
 
 class Ci(BaseApi):
