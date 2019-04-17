@@ -127,7 +127,8 @@ class Transport(object):
             response = requests.get(url,
                                     headers=self.__headers,
                                     timeout=REQUEST_TIMEOUT,
-                                    params=Transport._params_encode(params))
+                                    params=Transport._params_encode(params),
+                                    verify=False)
             if Transport.is_success(response):
                 return response.json()
             if response.status_code == NOT_FOUND:
@@ -156,7 +157,8 @@ class Transport(object):
                                      json=payload,
                                      headers=self.__headers,
                                      files=files if not None else [],
-                                     timeout=REQUEST_TIMEOUT)
+                                     timeout=REQUEST_TIMEOUT,
+                                     verify=False)
             if Transport.is_success(response):
                 data = json.loads(response.text)
                 return data
@@ -180,7 +182,8 @@ class Transport(object):
             response = requests.put(url,
                                     json=payload,
                                     headers=self.__headers,
-                                    timeout=REQUEST_TIMEOUT)
+                                    timeout=REQUEST_TIMEOUT,
+                                    verify=False)
             if Transport.is_success(response):
                 data = json.loads(response.text)
                 return data
